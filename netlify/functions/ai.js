@@ -17,42 +17,40 @@ exports.handler = async (event) => {
       };
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-       model: 'claude-3-5-sonnet-latest',
-        max_tokens: 300,
+        model: 'gpt-4o-mini',
         messages: [
-          { role: 'user', content: userMessage },
+          {
+            role: 'system',
+            content: 'You are a fitness coach helping with fat loss, diet, and protein intake.',
+          },
+          {
+            role: 'user',
+            content: userMessage,
+          },
         ],
+        max_tokens: 300,
       }),
     });
 
     const data = await response.json();
 
-    // 🔥 BETTER DEBUGGING
-    console.log('FULL AI RESPONSE:', JSON.stringify(data));
+    console.log('OPENAI RESPONSE:', JSON.stringify(data));
 
     let reply = '';
 
-    // ✅ HANDLE SUCCESS RESPONSE
-    if (response.ok && data?.content?.length > 0) {
-      reply = data.content
-        .map(item => item.text || '')
-        .join('\n');
-    } 
-    // ❌ HANDLE API ERRORS
-    else if (data?.error?.message) {
+    if (data?.choices?.[0]?.message?.content) {
+      reply = data.choices[0].message.content;
+    } else if (data?.error?.message) {
       reply = data.error.message;
-    } 
-    // ❌ FALLBACK
-    else {
-      reply = 'AI response format error';
+    } else {
+      reply = 'AI response error';
     }
 
     return {
@@ -61,7 +59,7 @@ exports.handler = async (event) => {
     };
 
   } catch (error) {
-    console.error('AI FUNCTION ERROR:', error);
+    console.error('AI ERROR:', error);
 
     return {
       statusCode: 200,
