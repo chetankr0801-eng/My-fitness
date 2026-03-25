@@ -8,7 +8,13 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
+
     const userMessage = body.message;
+    const memory = body.memory || {
+      meals: [],
+      protein: 0,
+      water: 0,
+    };
 
     if (!userMessage) {
       return {
@@ -16,6 +22,34 @@ exports.handler = async (event) => {
         body: JSON.stringify({ reply: 'No message provided' }),
       };
     }
+
+    // 🧠 SYSTEM PROMPT (PERSONALIZED + MEMORY)
+    const systemPrompt = `
+You are a strict but practical Indian fitness coach.
+
+User:
+- Age: 30
+- Weight: 65kg
+- Goal: Lose belly fat
+- Diet: Non-veg
+
+Daily targets:
+- Protein: 106g
+- Water: 3L
+- Activity: 15 checkpoints
+
+Today's progress:
+- Meals eaten: ${JSON.stringify(memory.meals)}
+- Protein so far: ${memory.protein}g
+- Water intake: ${memory.water}L
+
+Instructions:
+- Give direct meal suggestions
+- Focus on remaining protein
+- Be practical (Indian food)
+- Keep answers short
+- No generic advice
+`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -28,7 +62,7 @@ exports.handler = async (event) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a fitness coach helping with fat loss, diet, and protein intake.',
+            content: systemPrompt,
           },
           {
             role: 'user',
