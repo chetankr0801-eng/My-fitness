@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e0e">
+  <meta name="description" content="Chetan's personal adaptive fitness coaching system">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitSystem">
+  <title>Chetan — Fit System</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230e0e0e'/><text x='96' y='130' text-anchor='middle' font-size='100'>💪</text></svg>">
+  <link rel="stylesheet" href="/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── OFFLINE INDICATOR ── -->
+  <div class="offline-badge" id="offline-badge">⚡ Offline Mode — AI features unavailable</div>
+
+  <!-- ── TOP BAR ── -->
+  <div class="top-bar">
+    <div class="top-row">
+      <div>
+        <div class="greeting-name">Hey, <span>Chetan</span> 💪</div>
+        <div class="top-date" id="top-date"></div>
+      </div>
+      <div class="score-badge">
+        <div class="score-num" id="score-big">0</div>
+        <div class="score-lbl">Today's Score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONTENT ── -->
+  <div class="content">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="panel active" id="panel-dash">
+
+      <div class="sec-label">Overview</div>
+
+      <div id="trend-signal-wrap" style="margin-bottom:10px;"></div>
+
+      <div class="risk-alert" id="risk-alert">
+        <div class="risk-alert-icon">⚠️</div>
+        <div class="risk-alert-body">
+          <div class="risk-alert-title" id="risk-title">Pattern detected</div>
+          <div id="risk-desc"></div>
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <div class="ov-card">
+          <div class="ov-label">Checkpoints</div>
+          <div class="ov-val" id="ov-cp">0/15</div>
+          <div class="ov-sub" id="ov-cp-sub">Not started</div>
+          <div class="ov-bar"><div class="ov-bar-fill" id="ov-cp-bar" style="width:0%;background:var(--green)"></div></div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-label">Protein</div>
+          <div class="ov-val" id="ov-prot">0g</div>
+          <div class="ov-sub">Goal: 106g</div>
+          <div class="ov-bar"><div class="ov-bar-fill" id="ov-prot-bar" style="width:0%;background:var(--amber)"></div></div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-label">Water</div>
+          <div class="ov-val" id="ov-water">0L</div>
+          <div class="ov-sub">Goal: 3L</div>
+          <div class="ov-bar"><div class="ov-bar-fill" id="ov-water-bar" style="width:0%;background:var(--blue)"></div></div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-label">Streak</div>
+          <div class="ov-val" id="ov-streak" style="color:var(--amber)">0 🔥</div>
+          <div class="ov-sub">Days consistent</div>
+        </div>
+      </div>
+
+      <div class="sec-label">This Week</div>
+      <div class="card card-sm">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--text3);">Daily scores</div>
+          <div style="font-size:12px;color:var(--text2);">Avg: <strong id="week-avg" style="color:var(--text)">—</strong></div>
+        </div>
+        <div class="analytics-bar-chart" id="week-bars"></div>
+      </div>
+
+      <div class="sec-label">Profile</div>
+      <div class="card card-sm">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Weight</div>
+            <div style="font-size:15px;font-weight:600;margin-top:2px;" id="profile-weight">66 kg</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Height</div>
+            <div style="font-size:15px;font-weight:600;margin-top:2px;">166 cm</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">BMI</div>
+            <div style="font-size:15px;font-weight:600;margin-top:2px;" id="profile-bmi">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Goal</div>
+            <div style="font-size:15px;font-weight:600;margin-top:2px;color:var(--green)">106g/day</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-label">Weight Tracker</div>
+      <div class="card card-sm">
+        <div class="weight-input-row">
+          <input class="weight-in" id="weight-in" type="number" step="0.1" min="30" max="200" placeholder="kg" />
+          <button class="btn-green" id="weight-log-btn" style="padding:10px 14px;font-size:13px;" onclick="logWeight()">Log</button>
+          <div style="flex:1;text-align:right;">
+            <span class="weight-trend" id="weight-trend">—</span>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="weight-change-lbl"></div>
+          </div>
+        </div>
+        <div class="weight-chart" id="weight-chart"></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;">
+          <span id="wc-oldest-date"></span><span id="wc-today-date"></span>
+        </div>
+      </div>
+
+      <div class="sec-label">Today's Focus</div>
+      <div id="micro-insight-wrap"></div>
+      <div class="card" id="focus-card" style="border-left:3px solid var(--green)">
+        <div style="font-size:13px;color:var(--text2);line-height:1.6;" id="focus-text">Calculating your focus…</div>
+      </div>
+
+      <div class="sec-label">AI Coach Insight</div>
+      <div id="insight-container">
+        <div class="insight-card sev-low">
+          <div class="insight-no-data">
+            <span>🧠</span>
+            Logging for 2+ days unlocks pattern analysis.<br>Keep tracking — insights appear automatically.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /panel-dash -->
+
+    <!-- ═══ CHECKPOINTS ═══ -->
+    <div class="panel" id="panel-cp">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;padding-top:0.5rem;">
+        <div style="font-size:13px;color:var(--text2);">
+          <strong style="color:var(--text)" id="cp-done-count">0</strong> of
+          <strong style="color:var(--text)" id="cp-total-count">15</strong> complete
+        </div>
+        <div class="pct-pill pct-green" id="cp-pct-pill">0%</div>
+      </div>
+      <div class="prog-bg" style="margin-bottom:1rem;"><div class="prog-fill" id="cp-main-bar" style="width:0%"></div></div>
+      <div id="cp-groups"></div>
+    </div>
+
+    <!-- ═══ NUTRITION ═══ -->
+    <div class="panel" id="panel-nut">
+
+      <div class="sec-label">Protein Progress</div>
+      <div class="card">
+        <div class="ring-row">
+          <svg width="88" height="88" viewBox="0 0 88 88">
+            <circle cx="44" cy="44" r="35" fill="none" stroke="#272727" stroke-width="9"/>
+            <circle id="nut-ring" cx="44" cy="44" r="35" fill="none" stroke="#3ddc84" stroke-width="9"
+              stroke-linecap="round" stroke-dasharray="219.9" stroke-dashoffset="219.9"
+              transform="rotate(-90 44 44)" style="transition:stroke-dashoffset 0.5s ease"/>
+            <text id="nut-ring-pct" x="44" y="49" text-anchor="middle" font-size="14" font-weight="800" fill="#3ddc84" font-family="'Syne',sans-serif">0%</text>
+          </svg>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-val" id="nut-consumed">0g</div><div class="stat-lbl">Consumed</div></div>
+            <div class="stat-box"><div class="stat-val" style="color:var(--green)">106g</div><div class="stat-lbl">Target</div></div>
+            <div class="stat-box"><div class="stat-val" id="nut-remain">106g</div><div class="stat-lbl">Left</div></div>
+            <div class="stat-box"><div class="stat-val" id="nut-meals">0</div><div class="stat-lbl">Meals</div></div>
+          </div>
+        </div>
+        <div class="prog-bg"><div class="prog-fill" id="nut-bar" style="width:0%"></div></div>
+        <div class="prog-ends"><span>0g</span><span>106g</span></div>
+      </div>
+
+      <div class="sec-label">Log Food</div>
+      <div class="card">
+        <div class="chip-row">
+          <span class="chip" onclick="quickLog('2 boiled eggs')">🥚 2 Eggs</span>
+          <span class="chip" onclick="quickLog('1 cup moong dal cooked')">🫘 Dal</span>
+          <span class="chip" onclick="quickLog('100g paneer')">🧀 Paneer</span>
+          <span class="chip" onclick="quickLog('1 cup dahi curd')">🥛 Curd</span>
+          <span class="chip" onclick="quickLog('30g soya chunks dry')">🌱 Soya</span>
+          <span class="chip" onclick="quickLog('1 scoop whey protein 30g')">💪 Whey</span>
+          <span class="chip" onclick="quickLog('100g chicken breast cooked')">🍗 Chicken</span>
+          <span class="chip" onclick="quickLog('1 cup rajma cooked')">🫘 Rajma</span>
+        </div>
+        <div class="log-row">
+          <input class="log-in" id="food-in" type="text" placeholder="e.g. 200g paneer bhurji, 2 eggs…"/>
+          <button class="btn-green" id="add-btn" onclick="addFood()">Add</button>
+        </div>
+        <div class="ai-hint" id="ai-hint">AI estimates protein from anything you describe</div>
+        <div class="food-list" id="food-list"><div class="food-empty">No foods logged yet</div></div>
+      </div>
+
+      <div class="sec-label">Water Intake</div>
+      <div class="card card-sm">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div style="font-size:22px;font-weight:800;font-family:var(--font-display);" id="water-val">
+              0<span style="font-size:14px;color:var(--text3);font-family:var(--font-body)">L / 3L</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);">glasses today (250ml each)</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="addWater(-1)" style="width:40px;height:40px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+            <button onclick="addWater(1)"  style="width:40px;height:40px;background:var(--green-dim);border:1px solid var(--green-mid);border-radius:8px;color:var(--green);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+        </div>
+        <div class="prog-bg"><div class="prog-fill" id="water-bar" style="width:0%;background:var(--blue)"></div></div>
+        <div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap;" id="water-dots"></div>
+      </div>
+
+    </div><!-- /panel-nut -->
+
+    <!-- ═══ AI COACH ═══ -->
+    <div class="panel" id="panel-ai">
+      <div class="card" style="margin-top:0.5rem;">
+        <div class="chat-wrap">
+          <div class="qq-row">
+            <span class="qq" onclick="askQ('What should I eat to hit my protein goal today?')">What to eat today?</span>
+            <span class="qq" onclick="askQ('Give me a full Indian meal plan for muscle building')">Meal plan</span>
+            <span class="qq" onclick="askQ('Which checkpoints should I prioritize right now?')">Priorities</span>
+            <span class="qq" onclick="askQ('How can I improve my recovery and sleep quality?')">Sleep tips</span>
+            <span class="qq" onclick="askQ('Analyse my progress and give me honest feedback')">My progress</span>
+          </div>
+          <div class="chat-msgs" id="chat-msgs">
+            <div class="msg">
+              <div class="av ai">AI</div>
+              <div class="bubble ai">Hey Chetan! 👋 I'm your personal fitness coach. I know your daily goals — 106g protein, 3L water, 15 checkpoints. I can see what you've done today and give you specific, honest advice. What do you want to work on?</div>
+            </div>
+          </div>
+          <div class="chat-in-row">
+            <input class="chat-in" id="chat-in" type="text" placeholder="Ask your coach anything…"/>
+            <button class="btn-send" id="send-btn" onclick="sendChat()">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchPanel('dash')" id="nav-dash"><span class="nav-icon">⌂</span>Home</button>
+    <button class="nav-btn" onclick="switchPanel('cp')"   id="nav-cp">  <span class="nav-icon">✓</span>Habits</button>
+    <button class="nav-btn" onclick="switchPanel('nut')"  id="nav-nut"> <span class="nav-icon">◎</span>Nutrition</button>
+    <button class="nav-btn" onclick="switchPanel('ai')"   id="nav-ai">  <span class="nav-icon">✦</span>Coach</button>
+  </nav>
+
+</div><!-- /shell -->
+
+<!-- ── INSTALL BANNER ── -->
+<div class="install-banner" id="install-banner">
+  <div class="install-text"><strong>Add to Home Screen</strong><br>Install FitSystem for offline access</div>
+  <button class="btn-install" id="btn-install" onclick="triggerInstall()">Install</button>
+  <button class="btn-dismiss" onclick="dismissInstall()">×</button>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
