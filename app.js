@@ -1152,6 +1152,73 @@ function roughProteinEstimate(text) {
 
 /* ══════════════════════════════════════════════════════════════
    AI CHAT
+   /* ══════════════════════════════════════════════════════════════
+   AI CHAT
+══════════════════════════════════════════════════════════════ */
+
+async function sendChat() {
+  const inp = document.getElementById('chat-in');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+
+  appendMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  const sendBtn = document.getElementById('send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  const tid = appendMsg('ai', '<span class="spinner"></span>thinking…', true);
+
+  // OFFLINE MODE
+  if (!navigator.onLine) {
+    updateMsg(tid, '⚡ AI coach is unavailable offline. Your data is saved — ask me when you\'re back online!');
+    if (sendBtn) sendBtn.disabled = false;
+    return;
+  }
+
+  try {
+    // 🧠 MAIN AI RESPONSE
+    const reply = await callAI(text);
+
+    updateMsg(tid, reply);
+    chatHistory.push({ role: 'assistant', content: reply });
+
+    // 🍗 AUTO FOOD TRACKING
+    try {
+      const foodReply = await callAI(text);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(foodReply);
+      } catch {
+        parsed = null;
+      }
+
+      if (parsed && parsed.foods && parsed.foods.length > 0) {
+        parsed.foods.forEach(f => {
+          foods.unshift({
+            name: f.name,
+            protein: Math.round(f.protein)
+          });
+        });
+
+        updateAll();
+        saveState();
+        showToast("Food auto-logged 🍗", "success");
+      }
+
+    } catch (e) {
+      console.log("Auto food tracking skipped");
+    }
+
+  } catch (err) {
+    console.error(err);
+    updateMsg(tid, 'AI unavailable — try again later.');
+  }
+
+  if (sendBtn) sendBtn.disabled = false;
+}
 ══════════════════════════════════════════════════════════════ */
     updateMsg(tid, '⚡ AI coach is unavailable offline. Your data is saved — ask me when you\'re back online!');
 /* ══════════════════════════════════════════════════════════════
