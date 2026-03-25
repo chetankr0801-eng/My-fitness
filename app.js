@@ -118,18 +118,20 @@ function debounce(fn, delay = 300) {
    @return string              — AI reply, or fallback error message
 ══════════════════════════════════════════════════════════════ */
 async function callAI(userInput, options = {}) {
-  const { system = '', messages = null, maxTokens = 500 } = options;
-
   try {
+    // ✅ BUILD MEMORY (THIS IS THE KEY UPGRADE)
+    const memory = {
+      meals: foods.map(f => f.name),
+      protein: foods.reduce((sum, f) => sum + f.protein, 0),
+      water: waterGlasses * 0.25,
+    };
+
     const res = await fetch('/.netlify/functions/ai', {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message:    userInput,                                       // simple passthrough
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: maxTokens,
-        system:     system || undefined,
-        messages:   messages || [{ role: 'user', content: userInput }],
+        message: userInput,
+        memory: memory,
       }),
     });
 
@@ -139,15 +141,14 @@ async function callAI(userInput, options = {}) {
     }
 
     const data = await res.json();
-    // Support both response shapes: { reply } and { content[0].text }
-    return data.reply || data.content?.[0]?.text || 'AI unavailable — try again later.';
 
-  } catch(e) {
+    return data.reply || 'AI unavailable — try again later.';
+
+  } catch (e) {
     console.error('[callAI]', e.message);
     return 'AI unavailable — try again later.';
   }
 }
-
 /* ══════════════════════════════════════════════════════════════
    STORAGE  —  load / save helpers
 ══════════════════════════════════════════════════════════════ */
