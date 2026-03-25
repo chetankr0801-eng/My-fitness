@@ -35,14 +35,23 @@ exports.handler = async (event) => {
 
     const data = await response.json();
 
-    // ✅ SAFE RESPONSE HANDLING
+    // 🔥 BETTER DEBUGGING
+    console.log('FULL AI RESPONSE:', JSON.stringify(data));
+
     let reply = '';
 
-    if (data?.content?.[0]?.text) {
-      reply = data.content[0].text;
-    } else if (data?.error?.message) {
+    // ✅ HANDLE SUCCESS RESPONSE
+    if (response.ok && data?.content?.length > 0) {
+      reply = data.content
+        .map(item => item.text || '')
+        .join('\n');
+    } 
+    // ❌ HANDLE API ERRORS
+    else if (data?.error?.message) {
       reply = data.error.message;
-    } else {
+    } 
+    // ❌ FALLBACK
+    else {
       reply = 'AI response format error';
     }
 
@@ -53,6 +62,7 @@ exports.handler = async (event) => {
 
   } catch (error) {
     console.error('AI FUNCTION ERROR:', error);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ reply: 'AI unavailable — try again later.' }),
