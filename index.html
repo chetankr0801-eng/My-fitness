@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -245,6 +246,41 @@
       </div>
     </div>
 
+    <!-- ═══ SMART CHOICES ═══ -->
+    <div class="panel" id="panel-sc">
+
+      <div id="sc-phase-banner" style="padding-top:0.5rem;"></div>
+
+      <div class="remain-card">
+        <div class="remain-top">
+          <div>
+            <div class="remain-need" id="sc-remain">106g</div>
+            <div class="remain-label">protein still needed today</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:var(--text2);" id="sc-consumed">0g</div>
+            <div style="font-size:11px;color:var(--text3);">consumed</div>
+          </div>
+        </div>
+        <div class="prog-bg" style="margin-top:0.75rem;"><div class="prog-fill" id="sc-prog-bar" style="width:0%"></div></div>
+        <div class="remain-sub" style="margin-top:6px;" id="sc-remain-sub">Add food to start tracking</div>
+      </div>
+
+      <div class="diet-toggle">
+        <button class="diet-btn active" id="diet-all"    onclick="setDiet('all')">🍽️ All</button>
+        <button class="diet-btn"        id="diet-veg"    onclick="setDiet('veg')">🥗 Veg Only</button>
+        <button class="diet-btn"        id="diet-nonveg" onclick="setDiet('non-veg')">🍗 Non-Veg</button>
+      </div>
+
+      <div class="sec-label">Suggested Combos</div>
+      <div id="sc-combos"></div>
+
+      <div class="sec-label">Quick Snacks</div>
+      <div class="snack-grid" id="sc-snacks"></div>
+
+      <div style="height:1rem;"></div>
+    </div><!-- /panel-sc -->
+
   </div><!-- /content -->
 
   <!-- ── BOTTOM NAV ── -->
@@ -252,6 +288,7 @@
     <button class="nav-btn active" onclick="switchPanel('dash')" id="nav-dash"><span class="nav-icon">⌂</span>Home</button>
     <button class="nav-btn" onclick="switchPanel('cp')"   id="nav-cp">  <span class="nav-icon">✓</span>Habits</button>
     <button class="nav-btn" onclick="switchPanel('nut')"  id="nav-nut"> <span class="nav-icon">◎</span>Nutrition</button>
+    <button class="nav-btn" onclick="switchPanel('sc')"   id="nav-sc">  <span class="nav-icon">⚡</span>Choices</button>
     <button class="nav-btn" onclick="switchPanel('ai')"   id="nav-ai">  <span class="nav-icon">✦</span>Coach</button>
   </nav>
 
