@@ -466,3 +466,80 @@ body {
 .bn-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 4px; }
 .bn-value { font-size: 16px; font-weight: 800; color: var(--red); }
 .bn-sub   { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART CHOICES TAB
+════════════════════════════════════════════════════════════════ */
+
+/* ── Phase banner ── */
+.phase-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem; animation: fadeUp 0.3s ease;
+}
+.phase-banner.phase-start    { background: rgba(61,220,132,0.1);  border: 1px solid rgba(61,220,132,0.25); }
+.phase-banner.phase-build    { background: rgba(77,166,255,0.1);  border: 1px solid rgba(77,166,255,0.25); }
+.phase-banner.phase-work     { background: rgba(245,166,35,0.1);  border: 1px solid rgba(245,166,35,0.25); }
+.phase-banner.phase-shutdown { background: rgba(255,95,95,0.08);  border: 1px solid rgba(255,95,95,0.2);   }
+.phase-icon { font-size: 20px; flex-shrink: 0; }
+.phase-info { flex: 1; }
+.phase-name { font-size: 14px; font-weight: 700; }
+.phase-tip  { font-size: 12px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+
+/* ── Remaining protein card ── */
+.remain-card  { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.remain-top   { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.remain-need  { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--green); }
+.remain-label { font-size: 12px; color: var(--text3); }
+.remain-sub   { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* ── Diet toggle ── */
+.diet-toggle { display: flex; gap: 6px; margin-bottom: 1rem; }
+.diet-btn {
+  flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 600;
+  border-radius: 99px; border: 1.5px solid var(--border2); background: none;
+  cursor: pointer; color: var(--text3); transition: all 0.18s; font-family: var(--font-body);
+  min-height: 40px;
+}
+.diet-btn.active { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+
+/* ── Combo cards ── */
+.combo-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 0.75rem;
+  animation: fadeUp 0.3s ease;
+}
+.combo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.combo-title  { font-size: 13px; font-weight: 700; color: var(--text); }
+.combo-total  { font-family: var(--font-display); font-size: 15px; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: var(--green-dim); color: var(--green); border: 1px solid var(--green-mid); }
+.combo-total.over { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,166,35,0.3); }
+.combo-items  { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.combo-item   { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.combo-dot    { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.combo-food   { flex: 1; color: var(--text2); }
+.combo-g      { font-weight: 700; color: var(--green); white-space: nowrap; }
+.btn-add-combo {
+  width: 100%; padding: 10px; background: var(--green); color: #000; border: none;
+  border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: var(--font-body); transition: opacity 0.15s; min-height: 44px;
+}
+.btn-add-combo:hover  { opacity: 0.85; }
+.btn-add-combo:active { opacity: 0.7; transform: scale(0.98); }
+.btn-add-combo:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Quick snack grid ── */
+.snack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.5rem; }
+.snack-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  min-height: 72px;
+}
+.snack-card:hover  { border-color: var(--green-mid); background: var(--green-dim); }
+.snack-card:active { transform: scale(0.98); }
+.snack-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.snack-prot { font-size: 12px; color: var(--green); margin-top: 2px; font-weight: 700; }
+.snack-tap  { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+/* ── Empty / done state ── */
+.sc-empty { text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 13px; line-height: 1.7; }
+.sc-empty span { display: block; font-size: 28px; margin-bottom: 8px; }
