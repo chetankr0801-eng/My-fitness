@@ -1225,13 +1225,253 @@ async function sendChat() {
    NAVIGATION
 ══════════════════════════════════════════════════════════════ */
 function switchPanel(name) {
-  ['dash','cp','nut','ai'].forEach(p => {
+  ['dash','cp','nut','sc','ai'].forEach(p => {
     const panel = document.getElementById('panel-'+p);
     const btn   = document.getElementById('nav-'+p);
     if (panel) panel.classList.toggle('active', p === name);
     if (btn)   btn.classList.toggle('active',   p === name);
   });
+  if (name === 'sc') renderSmartChoices();
   window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ SMART CHOICES ENGINE
+   Pure logic + static food DB. Zero AI calls. Zero API cost.
+   Reads live state (foods array) — syncs with existing tracker.
+══════════════════════════════════════════════════════════════ */
+
+const FOOD_DB = [
+  { name:'Egg (1)',           protein: 6,  type:'non-veg', emoji:'🥚' },
+  { name:'Paneer (100g)',     protein:18,  type:'veg',     emoji:'🧀' },
+  { name:'Chicken (100g)',    protein:25,  type:'non-veg', emoji:'🍗' },
+  { name:'Dal (1 bowl)',      protein:10,  type:'veg',     emoji:'🫘' },
+  { name:'Curd (1 bowl)',     protein: 8,  type:'veg',     emoji:'🥛' },
+  { name:'Peanuts (40g)',     protein:10,  type:'veg',     emoji:'🥜' },
+  { name:'Whey scoop (30g)', protein:25,  type:'veg',     emoji:'💪' },
+  { name:'Soya chunks (30g)',protein:13,  type:'veg',     emoji:'🌱' },
+  { name:'Rajma (1 bowl)',    protein:12,  type:'veg',     emoji:'🫘' },
+  { name:'Tofu (100g)',       protein:10,  type:'veg',     emoji:'🫐' },
+  { name:'Tuna (100g)',       protein:29,  type:'non-veg', emoji:'🐟' },
+];
+
+/* Day phases based on Chetan's actual schedule:
+   Sleep 4–5 AM | Wake 11 AM–1 PM | Work 6:30 PM–3:30 AM */
+const DAY_PHASES = [
+  { id:'start',    name:'Wake & Start',   hours:[11,12,13,14], icon:'🌅', cls:'phase-start',
+    tip:'First meal of the day. Prioritise protein to kickstart metabolism.' },
+  { id:'build',    name:'Build Phase',    hours:[15,16,17,18], icon:'🏋️', cls:'phase-build',
+    tip:'Pre-work window. Heavy protein + complex carbs for sustained energy.' },
+  { id:'work',     name:'Work Mode',      hours:[19,20,21,22,23,0,1,2,3], icon:'💼', cls:'phase-work',
+    tip:'Working hours. Light meals, keep protein steady, avoid heavy carbs.' },
+  { id:'shutdown', name:'Wind Down',      hours:[4,5,6,7,8,9,10], icon:'🌙', cls:'phase-shutdown',
+    tip:'Pre-sleep window. Curd or paneer (slow protein) is ideal right now.' },
+];
+
+let scDietFilter = 'all';
+
+function getCurrentPhase() {
+  const h = new Date().getHours();
+  return DAY_PHASES.find(p => p.hours.includes(h)) || DAY_PHASES[0];
+}
+
+function getScRemaining() {
+  const consumed = foods.reduce((s,f) => s + f.protein, 0);
+  return Math.max(0, PROTEIN_TARGET - consumed);
+}
+
+function getFilteredDB() {
+  if (scDietFilter === 'veg')     return FOOD_DB.filter(f => f.type === 'veg');
+  if (scDietFilter === 'non-veg') return FOOD_DB.filter(f => f.type !== 'veg');
+  return FOOD_DB;
+}
+
+/* Core engine — generates up to 3 food combos, pure logic */
+function generateSmartChoices() {
+  const remaining = getScRemaining();
+  const db        = getFilteredDB();
+  if (!db.length || remaining <= 0) return [];
+
+  const sorted  = [...db].sort((a,b) => b.protein - a.protein);
+  const combos  = [];
+
+  /* ── Strategy 1: Greedy — highest protein first ── */
+  let c1 = [], t1 = 0;
+  for (const item of sorted) {
+    if (c1.length >= 3) break;
+    const qty    = item.protein <= 8 ? Math.min(Math.ceil((remaining - t1) / item.protein), 4) : 1;
+    const tp     = item.protein * qty;
+    const label  = qty > 1 ? `${item.name.replace(/\s*\(.*\)/,'').trim()} ×${qty}` : item.name;
+    c1.push({ ...item, qty, tp, label });
+    t1 += tp;
+    if (t1 >= remaining * 0.85) break;
+  }
+  if (c1.length) combos.push({ label:'Option 1', items: c1, total: t1 });
+
+  /* ── Strategy 2: Balanced mix ── */
+  const veg    = db.filter(f => f.type === 'veg').sort((a,b) => b.protein - a.protein);
+  const nonveg = db.filter(f => f.type !== 'veg').sort((a,b) => b.protein - a.protein);
+  const pool2  = scDietFilter === 'all'
+    ? [...nonveg.slice(0,1), ...veg.slice(0,2)]
+    : sorted.slice(1);
+  let c2 = [], t2 = 0;
+  for (const item of pool2) {
+    if (c2.length >= 3) break;
+    const qty   = item.protein <= 8 ? Math.min(Math.ceil((remaining - t2) / item.protein), 3) : 1;
+    const tp    = item.protein * qty;
+    const label = qty > 1 ? `${item.name.replace(/\s*\(.*\)/,'').trim()} ×${qty}` : item.name;
+    c2.push({ ...item, qty, tp, label });
+    t2 += tp;
+    if (t2 >= remaining * 0.80) break;
+  }
+  if (c2.length && JSON.stringify(c2.map(i=>i.name)) !== JSON.stringify(c1.map(i=>i.name))) {
+    combos.push({ label:'Option 2', items: c2, total: t2 });
+  }
+
+  /* ── Strategy 3: Phase-aware pick ── */
+  const phase = getCurrentPhase();
+  const phaseKeywords = {
+    shutdown: ['Curd','Paneer','Tofu'],
+    start:    ['Egg','Paneer','Whey'],
+    build:    ['Chicken','Whey','Egg'],
+    work:     ['Soya','Dal','Peanuts','Tuna'],
+  };
+  const keys   = phaseKeywords[phase.id] || [];
+  const pool3  = db.filter(f => keys.some(k => f.name.includes(k)));
+  const src3   = pool3.length >= 2 ? pool3.sort((a,b)=>b.protein-a.protein) : sorted;
+  let c3 = [], t3 = 0;
+  for (const item of src3.slice(0,3)) {
+    const qty   = item.protein <= 8 ? Math.min(Math.ceil((remaining - t3) / item.protein), 3) : 1;
+    const tp    = item.protein * qty;
+    const label = qty > 1 ? `${item.name.replace(/\s*\(.*\)/,'').trim()} ×${qty}` : item.name;
+    c3.push({ ...item, qty, tp, label });
+    t3 += tp;
+    if (t3 >= remaining * 0.80) break;
+  }
+  if (c3.length && JSON.stringify(c3.map(i=>i.name)) !== JSON.stringify(c1.map(i=>i.name))) {
+    combos.push({ label:`${phase.icon} ${phase.name} Pick`, items: c3, total: t3 });
+  }
+
+  return combos.slice(0, 3);
+}
+
+/* Add a full combo to the food tracker */
+function addComboToTracker(idx) {
+  const combo = generateSmartChoices()[idx];
+  if (!combo) return;
+  combo.items.forEach(item => {
+    for (let i = 0; i < (item.qty || 1); i++) {
+      foods.unshift({ name: item.name, protein: item.protein });
+    }
+  });
+  updateAll();
+  saveState();
+  showToast(`Added ${combo.items.length} items — +${combo.total}g protein 💪`, 'success');
+  renderSmartChoices();
+}
+
+/* Add a single snack from the quick grid */
+function addSnackToTracker(name, protein) {
+  foods.unshift({ name, protein });
+  updateAll();
+  saveState();
+  showToast(`+${protein}g protein added ✓`, 'success');
+  renderSmartChoices();
+}
+
+/* Diet filter button handler */
+function setDiet(type) {
+  scDietFilter = type;
+  ['all','veg','non-veg'].forEach(t => {
+    const btn = document.getElementById('diet-' + (t === 'non-veg' ? 'nonveg' : t));
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  renderCombos();
+  renderSnacks();
+}
+
+/* Master render — call when switching to Choices tab */
+function renderSmartChoices() {
+  renderPhaseBanner();
+  renderProteinHeader();
+  renderCombos();
+  renderSnacks();
+}
+
+function renderPhaseBanner() {
+  const el = document.getElementById('sc-phase-banner');
+  if (!el) return;
+  const phase = getCurrentPhase();
+  el.innerHTML = `
+    <div class="phase-banner ${phase.cls}">
+      <div class="phase-icon">${phase.icon}</div>
+      <div class="phase-info">
+        <div class="phase-name">${phase.name}</div>
+        <div class="phase-tip">${phase.tip}</div>
+      </div>
+    </div>`;
+}
+
+function renderProteinHeader() {
+  const consumed  = foods.reduce((s,f) => s + f.protein, 0);
+  const remaining = Math.max(0, PROTEIN_TARGET - consumed);
+  const pct       = Math.min(Math.round(consumed / PROTEIN_TARGET * 100), 100);
+  const done      = remaining === 0;
+
+  const setEl = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
+  setEl('sc-remain',    el => el.textContent = done ? '✓ Done!' : remaining + 'g');
+  setEl('sc-consumed',  el => el.textContent = consumed + 'g');
+  setEl('sc-prog-bar',  el => el.style.width = pct + '%');
+  setEl('sc-remain-sub',el => el.textContent = done
+    ? "You've hit your 106g target today. Great work! 🎯"
+    : `${consumed}g consumed · ${remaining}g to go · ${pct}% complete`);
+}
+
+function renderCombos() {
+  const el = document.getElementById('sc-combos');
+  if (!el) return;
+  const remaining = getScRemaining();
+
+  if (remaining <= 0) {
+    el.innerHTML = `<div class="sc-empty"><span>🎯</span>Protein target hit! Nothing left to fill.</div>`;
+    return;
+  }
+
+  const combos = generateSmartChoices();
+  if (!combos.length) {
+    el.innerHTML = `<div class="sc-empty"><span>🤔</span>No combos for this filter. Try "All".</div>`;
+    return;
+  }
+
+  el.innerHTML = combos.map((combo, idx) => `
+    <div class="combo-card">
+      <div class="combo-header">
+        <span class="combo-title">${combo.label}</span>
+        <span class="combo-total${combo.total > remaining + 10 ? ' over' : ''}">${combo.total}g</span>
+      </div>
+      <div class="combo-items">
+        ${combo.items.map(item => `
+          <div class="combo-item">
+            <div class="combo-dot"></div>
+            <span class="combo-food">${item.emoji || '🍽️'} ${item.label}</span>
+            <span class="combo-g">+${item.tp}g</span>
+          </div>`).join('')}
+      </div>
+      <button class="btn-add-combo" onclick="addComboToTracker(${idx})">
+        👉 Add to my day
+      </button>
+    </div>`).join('');
+}
+
+function renderSnacks() {
+  const el = document.getElementById('sc-snacks');
+  if (!el) return;
+  el.innerHTML = getFilteredDB().map(item => `
+    <div class="snack-card" onclick="addSnackToTracker(${JSON.stringify(item.name)}, ${item.protein})">
+      <div class="snack-name">${item.emoji} ${item.name}</div>
+      <div class="snack-prot">+${item.protein}g protein</div>
+      <div class="snack-tap">Tap to add</div>
+    </div>`).join('');
 }
 
 /* ══════════════════════════════════════════════════════════════
