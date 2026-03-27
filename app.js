@@ -1219,8 +1219,7 @@ async function sendChat() {
 
   if (sendBtn) sendBtn.disabled = false;
 }
-══════════════════════════════════════════════════════════════ */
-    updateMsg(tid, '⚡ AI coach is unavailable offline. Your data is saved — ask me when you\'re back online!');
+
 /* ══════════════════════════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════════════════════════ */
